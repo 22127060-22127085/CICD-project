@@ -14,7 +14,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    dockerImage = docker.build registry
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
                 }
             }
         }
@@ -25,19 +25,6 @@ pipeline {
                     docker.withRegistry( '', registryCredential ) {
                         dockerImage.push()
                     }
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                withDockerRegistry(credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/') {
-                    sh """
-                        if docker ps | grep -q my-nginx-container; then
-                            docker rm -f my-nginx-container
-                        fi
-                        docker run -d -p 4000:80 --name my-nginx-container $registry
-                    """
                 }
             }
         }
