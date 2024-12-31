@@ -11,13 +11,13 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/22127060-22127085/CICD-project.git'
             }
         }
-        stage('Build') {
-            steps {
-                script {
-                    dockerImage = docker.build("${registry}:${BUILD_NUMBER}")
-                }
-            }
-        }
+        // stage('Build') {
+        //     steps {
+        //         script {
+        //             dockerImage = docker.build("${registry}:${BUILD_NUMBER}")
+        //         }
+        //     }
+        // }
 
         stage('Push') {
             steps {
@@ -25,6 +25,19 @@ pipeline {
                     docker.withRegistry( '', registryCredential ) {
                         dockerImage.push()
                     }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                withDockerRegistry(credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/') {
+                    sh """
+                        if docker ps | grep -q my-nginx-container; then
+                            docker rm -f my-nginx-container
+                        fi
+                        docker run -d -p 4000:80 --name my-nginx-container $registry
+                    """
                 }
             }
         }
